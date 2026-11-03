@@ -110,12 +110,14 @@ let memoryDb: DatabaseSchema | null = null;
 let saveLock = false;
 let persistentReady = false;
 let persistQueue: Promise<void> = Promise.resolve();
+let persistedRecordIds = new Set<string>();
 const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.NEON_DATABASE_URL;
 const neonSql = databaseUrl ? neon(databaseUrl) : null;
 
 async function ensurePersistentTable() {
   if (!neonSql || persistentReady) return;
   await neonSql`CREATE TABLE IF NOT EXISTS game_state (id text PRIMARY KEY, data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now())`;
+  await neonSql`CREATE TABLE IF NOT EXISTS game_play_records (id text PRIMARY KEY, data jsonb NOT NULL)`;
   persistentReady = true;
 }
 
@@ -128,14 +130,21 @@ export async function loadPersistentDb(): Promise<void> {
   await ensurePersistentTable();
   const rows = await neonSql`SELECT data FROM game_state WHERE id = 'main' LIMIT 1`;
   if (rows.length) {
-    memoryDb = rows[0].data as DatabaseSchema;
-    return;
+    const stored = rows[0].data as DatabaseSchema;
+    const savedRecords = await neonSql`SELECT data FROM game_play_records ORDER BY data->>'timestamp' ASC`;
+    if (!savedRecords.length && stored.playRecords?.length) {
+      await neonSql`INSERT INTO game_play_records (id, data) SELECT record->>'id', record FROM jsonb_array_elements(${JSON.stringify(stored.playRecords)}::jsonb) AS records(record) ON CONFLICT (id) DO NOTHING`;
+      memoryDb = stored;
+    } else {
+      memoryDb = { ...stored, playRecords: savedRecords.map((row) => row.data as PlayRecord) };
+    }
+  } else {
+    const initial = getDefaultData();
+    await neonSql`INSERT INTO game_state (id, data) VALUES ('main', ${JSON.stringify(initial)}::jsonb) ON CONFLICT (id) DO NOTHING`;
+    const saved = await neonSql`SELECT data FROM game_state WHERE id = 'main' LIMIT 1`;
+    memoryDb = saved.length ? saved[0].data as DatabaseSchema : initial;
   }
-  const initial = getDefaultData();
-  await neonSql`INSERT INTO game_state (id, data) VALUES ('main', ${JSON.stringify(initial)}::jsonb) ON CONFLICT (id) DO NOTHING`;
-  const saved = await neonSql`SELECT data FROM game_state WHERE id = 'main' LIMIT 1`;
-  if (saved.length) memoryDb = saved[0].data as DatabaseSchema;
-  else memoryDb = initial;
+  persistedRecordIds = new Set((memoryDb?.playRecords || []).map((record) => record.id));
 }
 
 export async function flushPersistentDb(): Promise<void> {
@@ -164,11 +173,22 @@ export function getDb(): DatabaseSchema {
 }
 
 export function saveDb(data: DatabaseSchema): void {
+  const nextIds = new Set((data.playRecords || []).map((record) => record.id));
+  const recordsToAdd = (data.playRecords || []).filter((record) => !persistedRecordIds.has(record.id));
+  const recordIdsToDelete = [...persistedRecordIds].filter((id) => !nextIds.has(id));
+  persistedRecordIds = nextIds;
   memoryDb = data;
   if (neonSql) {
     persistQueue = persistQueue.then(async () => {
       await ensurePersistentTable();
-      await neonSql`INSERT INTO game_state (id, data, updated_at) VALUES ('main', ${JSON.stringify(data)}::jsonb, now()) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`;
+      if (recordIdsToDelete.length) {
+        await neonSql`DELETE FROM game_play_records WHERE id IN (SELECT jsonb_array_elements_text(${JSON.stringify(recordIdsToDelete)}::jsonb))`;
+      }
+      if (recordsToAdd.length) {
+        await neonSql`INSERT INTO game_play_records (id, data) SELECT record->>'id', record FROM jsonb_array_elements(${JSON.stringify(recordsToAdd)}::jsonb) AS records(record) ON CONFLICT (id) DO NOTHING`;
+      }
+      const durableData = { ...data, playRecords: [] };
+      await neonSql`INSERT INTO game_state (id, data, updated_at) VALUES ('main', ${JSON.stringify(durableData)}::jsonb, now()) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`;
     }).catch((err) => {
       console.error('Failed to persist game database to Neon:', err);
     });
