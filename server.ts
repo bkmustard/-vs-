@@ -256,6 +256,8 @@ app.post('/api/game/finish', async (req: Request, res: Response) => {
     chipsCollectedInGame = 0,
     jumpsCount = 0,
     slidesCount = 0,
+    playerNickname = '',
+    playerFaction,
     isTestPlay = false,
   } = req.body;
 
@@ -282,8 +284,8 @@ app.post('/api/game/finish', async (req: Request, res: Response) => {
     player = {
       id: playerId || `guest_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       serialNumber: generateGameSerial(),
-      nickname: '질주하는 러너',
-      faction: 'ANGEL',
+      nickname: (typeof playerNickname === 'string' && playerNickname.trim()) || '질주하는 러너',
+      faction: playerFaction === 'DEVIL' ? 'DEVIL' : 'ANGEL',
       factionLocked: true,
       isDiscord: false,
       totalScore: 0,
