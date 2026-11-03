@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { generateRandomNickname } from '../utils/nickname.js';
 import { Sparkles, Dices, X, CheckCircle2, Lock, ShieldAlert } from 'lucide-react';
-import { PlayerData } from '../api.js';
+import { PlayerData, fetchDiscordAuthUrl } from '../api.js';
 
 interface GuestModalProps {
   isOpen: boolean;
@@ -40,6 +40,18 @@ export const GuestModal: React.FC<GuestModalProps> = ({
       return; // Locked permanently
     }
     setSelectedFaction(faction);
+  };
+
+  const handleDiscordLogin = async () => {
+    try {
+      setIsSubmitting(true);
+      setErrorMsg('');
+      const { url } = await fetchDiscordAuthUrl(selectedFaction);
+      window.location.assign(url);
+    } catch (err: any) {
+      setErrorMsg(err.message || '디스코드 로그인에 실패했습니다.');
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,12 +113,12 @@ export const GuestModal: React.FC<GuestModalProps> = ({
             <Sparkles className="h-6 w-6" />
           </div>
           <h2 className="font-['Black_Han_Sans'] text-2xl text-white drop-shadow">
-            {isFactionLocked ? '플레이어 프로필 설정' : '진영 선택 및 게스트 등록'}
+            {isFactionLocked ? '플레이어 프로필 설정' : '로그인 방법 및 진영 선택'}
           </h2>
           <p className="mt-1 text-xs text-slate-400">
             {isFactionLocked
               ? '소속 진영이 확정되었습니다. 닉네임만 변경할 수 있습니다.'
-              : '진영은 처음에 단 한 번만 선택할 수 있습니다. 신중하게 선택하세요!'}
+              : '디스코드 또는 게스트로 로그인하세요. 진영은 확정 후 변경할 수 없습니다.'}
           </p>
         </div>
 
@@ -114,7 +126,7 @@ export const GuestModal: React.FC<GuestModalProps> = ({
           {/* Nickname Generation */}
           <div>
             <label className="block text-xs font-black text-slate-200 mb-1.5 flex items-center gap-1.5">
-              <span>플레이어 닉네임</span>
+              <span>게스트 닉네임 (디스코드 로그인은 계정 이름 사용)</span>
               <span className="text-[10px] text-amber-400 font-bold">[수식어 + 고정 이름]</span>
             </label>
             <div className="flex gap-2">
@@ -228,17 +240,33 @@ export const GuestModal: React.FC<GuestModalProps> = ({
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-2xl border-3 border-black bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 py-3.5 text-base font-['Black_Han_Sans'] text-slate-950 shadow-[4px_4px_0px_#000] hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000] disabled:opacity-50 transition-all"
-          >
-            {isSubmitting
-              ? '저장 중...'
-              : isFactionLocked
-              ? '프로필 저장'
-              : '선택한 진영으로 확정하기'}
-          </button>
+          {isFactionLocked ? (
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-2xl border-3 border-black bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 py-3.5 text-base font-['Black_Han_Sans'] text-slate-950 shadow-[4px_4px_0px_#000] hover:scale-[1.02] disabled:opacity-50 transition-all"
+            >
+              {isSubmitting ? '저장 중...' : '프로필 저장'}
+            </button>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="rounded-2xl border-3 border-black bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 py-3.5 text-sm font-['Black_Han_Sans'] text-slate-950 shadow-[4px_4px_0px_#000] hover:scale-[1.02] disabled:opacity-50 transition-all"
+              >
+                {isSubmitting ? '처리 중...' : '게스트로 로그인하기'}
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleDiscordLogin}
+                className="rounded-2xl border-3 border-black bg-indigo-600 py-3.5 text-sm font-['Black_Han_Sans'] text-white shadow-[4px_4px_0px_#000] hover:bg-indigo-500 disabled:opacity-50 transition-all"
+              >
+                {isSubmitting ? '이동 중...' : '디스코드 연동하기'}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
