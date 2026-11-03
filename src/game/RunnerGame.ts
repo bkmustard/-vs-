@@ -139,6 +139,9 @@ export class RunnerGame {
   private backgroundScroll1 = 0;
   private backgroundScroll2 = 0;
   private screenShakeTime = 0;
+  private deathExplosionTime = 0;
+  private deathExplosionX = 0;
+  private deathExplosionY = 0;
 
   // Animation frame
   private animationFrameId: number | null = null;
@@ -338,11 +341,8 @@ export class RunnerGame {
     }
 
     if (this.state === 'GAMEOVER') {
-      if (this.player.hitAnimProgress < 1) {
-        this.player.hitAnimProgress += dt * 2.8;
-        this.player.y += Math.sin(this.player.hitAnimProgress * Math.PI) * 2;
-        this.player.rotation += dt * 6;
-      }
+      this.deathExplosionTime = Math.max(0, this.deathExplosionTime - dt);
+      this.screenShakeTime = Math.max(0, this.screenShakeTime - dt);
       this.updateParticles(dt);
       this.updateFloatTexts(dt);
       return;
@@ -922,12 +922,16 @@ export class RunnerGame {
     if (this.isGameOverTriggered) return;
     this.isGameOverTriggered = true;
     this.state = 'GAMEOVER';
-    this.screenShakeTime = 0.45;
+    this.screenShakeTime = 0.62;
+    this.deathExplosionTime = 0.58;
     sfx.stopBgm();
     sfx.playCrash();
 
     const hb = this.getCurrentHitbox();
-    this.spawnImpactParticles(hb.x + hb.width / 2, hb.y + hb.height / 2);
+    this.deathExplosionX = hb.x + hb.width / 2;
+    this.deathExplosionY = hb.y + hb.height / 2;
+    this.spawnDeathExplosionParticles(this.deathExplosionX, this.deathExplosionY);
+    this.addFloatText('펑!!!!!!!!!!', this.deathExplosionX, this.deathExplosionY - 55, '#fde047');
 
     const metrics = this.getMetrics();
     setTimeout(() => {
@@ -1067,6 +1071,27 @@ export class RunnerGame {
     }
   }
 
+  private spawnDeathExplosionParticles(x: number, y: number) {
+    const colors = this.faction === 'ANGEL'
+      ? ['#ffffff', '#fde047', '#38bdf8', '#f97316', '#fef08a']
+      : ['#ffffff', '#ef4444', '#f97316', '#7f1d1d', '#facc15'];
+    for (let i = 0; i < 72; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 620 + 180;
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 80,
+        size: Math.random() * 13 + 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: 1,
+        life: 0,
+        maxLife: 0.58,
+      });
+    }
+  }
+
   private spawnDebrisShatterParticles(x: number, y: number, _obsType?: string) {
     const isAngel = this.faction === 'ANGEL';
     const colors = isAngel
@@ -1175,7 +1200,7 @@ export class RunnerGame {
     this.ctx.save();
 
     if (this.screenShakeTime > 0) {
-      const shakeMag = this.screenShakeTime * 15;
+      const shakeMag = this.screenShakeTime * (this.state === 'GAMEOVER' ? 80 : 15);
       const ox = (Math.random() - 0.5) * shakeMag;
       const oy = (Math.random() - 0.5) * shakeMag;
       this.ctx.translate(ox, oy);
@@ -1197,9 +1222,10 @@ export class RunnerGame {
 
     // 5. Particles
     this.drawParticles();
+    this.drawDeathExplosion();
 
-    // 6. Player
-    this.drawPlayer();
+    // 6. Player (the character vanishes into the blast on death)
+    if (this.state !== 'GAMEOVER') this.drawPlayer();
 
     // 7. Floating Numbers
     this.drawFloatTexts();
@@ -1978,6 +2004,60 @@ export class RunnerGame {
 
       this.ctx.restore();
     }
+  }
+
+  private drawDeathExplosion() {
+    if (this.deathExplosionTime <= 0) return;
+    const progress = 1 - this.deathExplosionTime / 0.58;
+    const alpha = Math.max(0, 1 - progress);
+    const radius = 24 + progress * 180;
+    const x = this.deathExplosionX;
+    const y = this.deathExplosionY;
+
+    this.ctx.save();
+    this.ctx.globalAlpha = alpha;
+    const flash = this.ctx.createRadialGradient(x, y, 2, x, y, radius);
+    flash.addColorStop(0, '#ffffff');
+    flash.addColorStop(0.22, this.faction === 'ANGEL' ? '#fde047' : '#f97316');
+    flash.addColorStop(1, 'rgba(239, 68, 68, 0)');
+    this.ctx.fillStyle = flash;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.strokeStyle = this.faction === 'ANGEL' ? '#fff7ae' : '#ff5538';
+    this.ctx.lineWidth = 12 * (1 - progress) + 2;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius * 0.78, 0, Math.PI * 2);
+    this.ctx.stroke();
+
+    this.ctx.translate(x, y - 8);
+    this.ctx.rotate(-0.08 + progress * 0.16);
+    this.ctx.beginPath();
+    for (let i = 0; i < 28; i++) {
+      const angle = (i / 28) * Math.PI * 2;
+      const spikeRadius = i % 2 === 0 ? 76 : 43;
+      const px = Math.cos(angle) * spikeRadius;
+      const py = Math.sin(angle) * spikeRadius;
+      if (i === 0) this.ctx.moveTo(px, py);
+      else this.ctx.lineTo(px, py);
+    }
+    this.ctx.closePath();
+    this.ctx.fillStyle = this.faction === 'ANGEL' ? '#facc15' : '#ef4444';
+    this.ctx.strokeStyle = '#080808';
+    this.ctx.lineWidth = 7;
+    this.ctx.fill();
+    this.ctx.stroke();
+
+    this.ctx.font = '900 42px "Black Han Sans", sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.lineWidth = 8;
+    this.ctx.strokeStyle = '#080808';
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.strokeText('펑!!!!!!!!!!', 0, 0);
+    this.ctx.fillText('펑!!!!!!!!!!', 0, 0);
+    this.ctx.restore();
   }
 
   private drawParticles() {
