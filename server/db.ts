@@ -189,56 +189,6 @@ export function saveDb(data: DatabaseSchema): void {
 }
 
 export function getFactionScores() {
-
-export function getDb(): DatabaseSchema {
-  if (memoryDb) {
-    return memoryDb;
-  }
-
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-
-    if (fs.existsSync(DB_FILE)) {
-      const content = fs.readFileSync(DB_FILE, 'utf-8');
-      memoryDb = JSON.parse(content);
-      if (!memoryDb?.players || !memoryDb?.playRecords || !memoryDb?.eventConfig) {
-        memoryDb = getDefaultData();
-        saveDb(memoryDb);
-      }
-    } else {
-      memoryDb = getDefaultData();
-      saveDb(memoryDb);
-    }
-  } catch (err) {
-    console.error('Error reading database file, using fallback memory state:', err);
-    memoryDb = getDefaultData();
-  }
-
-  return memoryDb!;
-}
-
-export function saveDb(data: DatabaseSchema): void {
-  memoryDb = data;
-  if (saveLock) return;
-  saveLock = true;
-
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
-    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
-    fs.renameSync(tempFile, DB_FILE);
-  } catch (err) {
-    console.error('Failed to write database file:', err);
-  } finally {
-    saveLock = false;
-  }
-}
-
-export function getFactionScores() {
   const db = getDb();
   let angelScore = 0;
   let devilScore = 0;
