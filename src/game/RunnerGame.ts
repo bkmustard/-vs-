@@ -1,4 +1,6 @@
-import { sfx } from '../utils/audio.js';
+tab: 6, Title: "raw.githubusercontent.com/bkmustard/-vs-/08201c5fc7c0c3484c41a2e6af411228e288180f/src/game/RunnerGame.ts", URL: "https://raw.githubusercontent.com/bkmustard/-vs-/08201c5fc7c0c3484c41a2e6af411228e288180f/src/game/RunnerGame.ts".
+1 AXWebArea raw.githubusercontent.com/bkmustard/-vs-/08201c5fc7c0c3484c41a2e6af411228e288180f/src/game/RunnerGame.ts
+	2 text import { sfx } from '../utils/audio.js';
 
 export type GameFaction = 'ANGEL' | 'DEVIL';
 
@@ -19,7 +21,7 @@ export interface GameMetrics {
 
 export interface Obstacle {
   id: number;
-  type: 'SPIKE' | 'AERIAL' | 'BOX' | 'CEILING' | 'DROPPER' | 'SURGE' | 'HOPPER' | 'BOBBING_ORB' | 'LIFTING_GATE';
+  type: 'SPIKE' | 'AERIAL' | 'BOX' | 'CEILING' | 'DROPPER' | 'SURGE' | 'HOPPER' | 'BOBBING_ORB' | 'LIFTING_GATE' | 'PIT';
   x: number;
   y: number;
   width: number;
@@ -366,7 +368,7 @@ export class RunnerGame {
         this.isFeverActive = false;
         this.feverTimer = 0;
         this.feverMeter = 0;
-        this.postFeverInvulnerabilityTime = 0.25;
+        this.postFeverInvulnerabilityTime = 1.0;
         this.addFloatText('FEVER END', this.player.x + 35, this.player.y - 20, '#94a3b8');
       }
     }
@@ -537,6 +539,23 @@ export class RunnerGame {
         }
       }
 
+      // A grounded player falls into open pits; jumping clears them.
+      if (
+        !obs.passed &&
+        obs.type === 'PIT' &&
+        this.player.isGrounded &&
+        playerHitbox.x < obs.x + obs.width &&
+        playerHitbox.x + playerHitbox.width > obs.x
+      ) {
+        if (this.postFeverInvulnerabilityTime > 0 || this.isFeverActive) {
+          obs.passed = true;
+          this.obstacles.splice(i, 1);
+          continue;
+        }
+        this.triggerGameOver();
+        return;
+      }
+
       // Collision check
       if (!obs.passed && this.checkCollision(playerHitbox, obs)) {
         if (this.postFeverInvulnerabilityTime > 0) {
@@ -673,8 +692,8 @@ export class RunnerGame {
   }
 
   private spawnPattern() {
-    // 11 obstacle patterns including three vertically moving hazards!
-    const patternType = Math.floor(Math.random() * 11);
+    // 13 obstacle patterns, including moving hazards and two pit widths.
+    const patternType = Math.floor(Math.random() * 13);
     const startX = this.V_WIDTH + 80;
 
     switch (patternType) {
@@ -921,6 +940,32 @@ export class RunnerGame {
           moveCenterY,
           moveAmplitude: 32,
           moveSpeed: 2.6,
+        });
+        break;
+      }
+      case 11: {
+        const width = 88;
+        this.obstacles.push({
+          id: Date.now() + Math.random(),
+          type: 'PIT',
+          x: startX,
+          y: this.GROUND_Y,
+          width,
+          height: this.V_HEIGHT - this.GROUND_Y,
+          passed: false,
+        });
+        break;
+      }
+      case 12: {
+        const width = 116;
+        this.obstacles.push({
+          id: Date.now() + Math.random(),
+          type: 'PIT',
+          x: startX,
+          y: this.GROUND_Y,
+          width,
+          height: this.V_HEIGHT - this.GROUND_Y,
+          passed: false,
         });
         break;
       }
@@ -1481,6 +1526,39 @@ export class RunnerGame {
       this.ctx.translate(obs.x, obs.y);
 
       switch (obs.type) {
+        case 'PIT': {
+          const w = obs.width;
+          const h = obs.height;
+          this.ctx.fillStyle = '#05060b';
+          this.ctx.beginPath();
+          this.ctx.moveTo(0, 0);
+          this.ctx.lineTo(w * 0.12, 13);
+          this.ctx.lineTo(w * 0.25, 7);
+          this.ctx.lineTo(w * 0.4, 17);
+          this.ctx.lineTo(w * 0.57, 8);
+          this.ctx.lineTo(w * 0.74, 15);
+          this.ctx.lineTo(w * 0.88, 6);
+          this.ctx.lineTo(w, 0);
+          this.ctx.lineTo(w, h);
+          this.ctx.lineTo(0, h);
+          this.ctx.closePath();
+          this.ctx.fill();
+          this.ctx.strokeStyle = isAngel ? '#38bdf8' : '#ef4444';
+          this.ctx.lineWidth = 3;
+          this.ctx.beginPath();
+          this.ctx.moveTo(0, 1);
+          this.ctx.lineTo(w * 0.12, 13);
+          this.ctx.lineTo(w * 0.25, 7);
+          this.ctx.lineTo(w * 0.4, 17);
+          this.ctx.lineTo(w * 0.57, 8);
+          this.ctx.lineTo(w * 0.74, 15);
+          this.ctx.lineTo(w * 0.88, 6);
+          this.ctx.lineTo(w, 1);
+          this.ctx.stroke();
+          this.ctx.fillStyle = isAngel ? 'rgba(56, 189, 248, 0.45)' : 'rgba(249, 115, 22, 0.5)';
+          this.ctx.fillRect(w * 0.18, h * 0.55, w * 0.64, 3);
+          break;
+        }
         // -------------------------------------------------------------
         // 1. CRATE / ALTAR BOX
         // -------------------------------------------------------------
