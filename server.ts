@@ -589,7 +589,7 @@ app.get('/api/discord/auth-url', (req: Request, res: Response) => {
 
   const host = req.get('host') || `localhost:${PORT}`;
   const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
-  const redirectUri = `${protocol}://${host}/api/discord/callback`;
+  const redirectUri = 'https://gbstars-s8.vercel.app/api/discord/callback';
 
   const state = `${requestedFaction}:${Math.random().toString(36).substring(2)}`;
   const url = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify&state=${encodeURIComponent(state)}`;
@@ -612,7 +612,7 @@ app.get('/api/discord/callback', async (req: Request, res: Response) => {
   try {
     const host = req.get('host') || `localhost:${PORT}`;
     const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
-    const redirectUri = `${protocol}://${host}/api/discord/callback`;
+    const redirectUri = 'https://gbstars-s8.vercel.app/api/discord/callback';
 
     // Exchange code for token
     const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
