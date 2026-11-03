@@ -7,14 +7,12 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   fetchFactionScores,
   fetchCurrentPlayer,
-  initGuestPlayer,
   startGameSession,
   finishGameSession,
   FactionScoresResponse,
   PlayerData,
   PlayRecord,
 } from './api.js';
-import { generateRandomNickname } from './utils/nickname.js';
 import { sfx } from './utils/audio.js';
 import { GameMetrics } from './game/RunnerGame.js';
 
@@ -106,6 +104,9 @@ export default function App() {
         })
         .catch(() => {
           localStorage.removeItem('kiban_current_player_id');
+          localStorage.removeItem('kiban_guest_id');
+          localStorage.removeItem('kiban_faction_locked');
+          localStorage.removeItem('kiban_locked_faction');
           promptInitialGuestRegistration();
         });
     } else {
@@ -117,21 +118,8 @@ export default function App() {
     return () => clearInterval(interval);
   }, [loadScores]);
 
-  const promptInitialGuestRegistration = async () => {
-    try {
-      const defaultNick = generateRandomNickname();
-      const res = await initGuestPlayer({
-        nickname: defaultNick,
-        faction: 'ANGEL',
-      });
-      setPlayer(res.player);
-      localStorage.setItem('kiban_guest_id', res.player.id);
-      localStorage.setItem('kiban_current_player_id', res.player.id);
-      // Open modal on first launch so user can choose their faction!
-      setIsGuestModalOpen(true);
-    } catch (err) {
-      console.error('Failed to create initial guest:', err);
-    }
+  const promptInitialGuestRegistration = () => {
+    setIsGuestModalOpen(true);
   };
 
   const handleToggleMute = () => {
