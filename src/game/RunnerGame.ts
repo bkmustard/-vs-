@@ -1443,6 +1443,78 @@ export class RunnerGame {
       this.ctx.lineTo(x - 20, this.V_HEIGHT);
       this.ctx.stroke();
     }
+
+    // Cut each pit through the ground so it reads as a deep, open drop.
+    for (const pit of this.obstacles) {
+      if (pit.type !== 'PIT' || pit.x >= this.V_WIDTH || pit.x + pit.width <= 0) continue;
+      const x = Math.max(0, pit.x);
+      const right = Math.min(this.V_WIDTH, pit.x + pit.width);
+      const width = right - x;
+      const depth = this.V_HEIGHT - this.GROUND_Y;
+      if (width <= 0) continue;
+
+      this.ctx.save();
+      this.ctx.beginPath();
+      this.ctx.rect(x, this.GROUND_Y, width, depth);
+      this.ctx.clip();
+
+      const abyss = this.ctx.createLinearGradient(0, this.GROUND_Y, 0, this.V_HEIGHT);
+      abyss.addColorStop(0, '#020617');
+      abyss.addColorStop(0.22, '#030712');
+      abyss.addColorStop(0.72, '#000000');
+      abyss.addColorStop(1, '#000000');
+      this.ctx.fillStyle = abyss;
+      this.ctx.fillRect(x, this.GROUND_Y, width, depth);
+
+      // Inset rock walls and receding ledges make the opening look excavated.
+      this.ctx.fillStyle = 'rgba(30, 41, 59, 0.96)';
+      this.ctx.beginPath();
+      this.ctx.moveTo(pit.x, this.GROUND_Y);
+      this.ctx.lineTo(pit.x + pit.width * 0.18, this.GROUND_Y + 30);
+      this.ctx.lineTo(pit.x + pit.width * 0.28, this.V_HEIGHT);
+      this.ctx.lineTo(pit.x, this.V_HEIGHT);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.beginPath();
+      this.ctx.moveTo(pit.x + pit.width, this.GROUND_Y);
+      this.ctx.lineTo(pit.x + pit.width * 0.82, this.GROUND_Y + 30);
+      this.ctx.lineTo(pit.x + pit.width * 0.72, this.V_HEIGHT);
+      this.ctx.lineTo(pit.x + pit.width, this.V_HEIGHT);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      this.ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+      this.ctx.lineWidth = 2;
+      for (const level of [0.28, 0.52, 0.76]) {
+        const y = this.GROUND_Y + depth * level;
+        this.ctx.beginPath();
+        this.ctx.moveTo(pit.x + pit.width * 0.12, y);
+        this.ctx.lineTo(pit.x + pit.width * 0.88, y);
+        this.ctx.stroke();
+      }
+      this.ctx.restore();
+
+      // High-contrast broken rim and glowing cut edges.
+      this.ctx.strokeStyle = '#05060b';
+      this.ctx.lineWidth = 12;
+      this.ctx.beginPath();
+      this.ctx.moveTo(pit.x, this.GROUND_Y - 1);
+      this.ctx.lineTo(pit.x + pit.width, this.GROUND_Y - 1);
+      this.ctx.stroke();
+      this.ctx.strokeStyle = isAngel ? '#38bdf8' : '#fb5b35';
+      this.ctx.lineWidth = 3;
+      this.ctx.beginPath();
+      this.ctx.moveTo(pit.x + 1, this.GROUND_Y + 2);
+      this.ctx.lineTo(pit.x + pit.width * 0.18, this.GROUND_Y + 14);
+      this.ctx.lineTo(pit.x + pit.width * 0.36, this.GROUND_Y + 5);
+      this.ctx.moveTo(pit.x + pit.width * 0.64, this.GROUND_Y + 5);
+      this.ctx.lineTo(pit.x + pit.width * 0.82, this.GROUND_Y + 14);
+      this.ctx.lineTo(pit.x + pit.width - 1, this.GROUND_Y + 2);
+      this.ctx.stroke();
+
+      this.ctx.fillStyle = isAngel ? 'rgba(56, 189, 248, 0.18)' : 'rgba(249, 115, 22, 0.2)';
+      this.ctx.fillRect(x + width * 0.3, this.GROUND_Y + depth * 0.84, width * 0.4, 3);
+    }
   }
 
   /**
