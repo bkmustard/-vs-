@@ -217,7 +217,9 @@ app.post('/api/game/start', (req: Request, res: Response) => {
 
   const db = getDb();
   const player = db.players.find((p) => p.id === playerId);
-  if (!player && !isTestPlay) {
+  // Vercel serverless instances do not share the local file-backed player cache.
+  // Guest and Discord IDs are valid even when this instance has not loaded them.
+  if (!player && !isTestPlay && !/^(guest|discord)_/.test(String(playerId))) {
     return res.status(404).json({ error: '등록되지 않은 플레이어입니다.' });
   }
 
