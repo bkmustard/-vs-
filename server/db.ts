@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { neon } from '@neondatabase/serverless';
 
 export type Faction = 'ANGEL' | 'DEVIL';
 
@@ -107,6 +108,87 @@ function getDefaultData(): DatabaseSchema {
 
 let memoryDb: DatabaseSchema | null = null;
 let saveLock = false;
+let persistentReady = false;
+let persistQueue: Promise<void> = Promise.resolve();
+const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.NEON_DATABASE_URL;
+const neonSql = databaseUrl ? neon(databaseUrl) : null;
+
+async function ensurePersistentTable() {
+  if (!neonSql || persistentReady) return;
+  await neonSql`CREATE TABLE IF NOT EXISTS game_state (id text PRIMARY KEY, data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now())`;
+  persistentReady = true;
+}
+
+// Load the latest durable state for every serverless request.
+export async function loadPersistentDb(): Promise<void> {
+  if (!neonSql) {
+    if (process.env.VERCEL) throw new Error('DATABASE_URL is missing; persistent game storage is unavailable.');
+    return;
+  }
+  await ensurePersistentTable();
+  const rows = await neonSql`SELECT data FROM game_state WHERE id = 'main' LIMIT 1`;
+  if (rows.length) {
+    memoryDb = rows[0].data as DatabaseSchema;
+    return;
+  }
+  const initial = getDefaultData();
+  await neonSql`INSERT INTO game_state (id, data) VALUES ('main', ${JSON.stringify(initial)}::jsonb) ON CONFLICT (id) DO NOTHING`;
+  const saved = await neonSql`SELECT data FROM game_state WHERE id = 'main' LIMIT 1`;
+  if (saved.length) memoryDb = saved[0].data as DatabaseSchema;
+  else memoryDb = initial;
+}
+
+export async function flushPersistentDb(): Promise<void> {
+  await persistQueue;
+}
+
+export function getDb(): DatabaseSchema {
+  if (memoryDb) return memoryDb;
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (fs.existsSync(DB_FILE)) {
+      memoryDb = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+      if (!memoryDb?.players || !memoryDb?.playRecords || !memoryDb?.eventConfig) {
+        memoryDb = getDefaultData();
+        saveDb(memoryDb);
+      }
+    } else {
+      memoryDb = getDefaultData();
+      saveDb(memoryDb);
+    }
+  } catch (err) {
+    console.error('Error reading database file, using fallback memory state:', err);
+    memoryDb = getDefaultData();
+  }
+  return memoryDb!;
+}
+
+export function saveDb(data: DatabaseSchema): void {
+  memoryDb = data;
+  if (neonSql) {
+    persistQueue = persistQueue.then(async () => {
+      await ensurePersistentTable();
+      await neonSql`INSERT INTO game_state (id, data, updated_at) VALUES ('main', ${JSON.stringify(data)}::jsonb, now()) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`;
+    }).catch((err) => {
+      console.error('Failed to persist game database to Neon:', err);
+    });
+    return;
+  }
+  if (process.env.VERCEL || saveLock) return;
+  saveLock = true;
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tempFile, DB_FILE);
+  } catch (err) {
+    console.error('Failed to write database file:', err);
+  } finally {
+    saveLock = false;
+  }
+}
+
+export function getFactionScores() {
 
 export function getDb(): DatabaseSchema {
   if (memoryDb) {
