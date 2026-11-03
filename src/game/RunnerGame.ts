@@ -925,13 +925,12 @@ export class RunnerGame {
     this.screenShakeTime = 0.62;
     this.deathExplosionTime = 0.58;
     sfx.stopBgm();
-    sfx.playCrash();
+    sfx.playDeathExplosion();
 
     const hb = this.getCurrentHitbox();
     this.deathExplosionX = hb.x + hb.width / 2;
     this.deathExplosionY = hb.y + hb.height / 2;
     this.spawnDeathExplosionParticles(this.deathExplosionX, this.deathExplosionY);
-    this.addFloatText('펑!!!!!!!!!!', this.deathExplosionX, this.deathExplosionY - 55, '#fde047');
 
     const metrics = this.getMetrics();
     setTimeout(() => {
@@ -2049,14 +2048,6 @@ export class RunnerGame {
     this.ctx.fill();
     this.ctx.stroke();
 
-    this.ctx.font = '900 42px "Black Han Sans", sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.lineWidth = 8;
-    this.ctx.strokeStyle = '#080808';
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.strokeText('펑!!!!!!!!!!', 0, 0);
-    this.ctx.fillText('펑!!!!!!!!!!', 0, 0);
     this.ctx.restore();
   }
 
