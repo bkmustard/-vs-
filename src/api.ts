@@ -162,8 +162,8 @@ export async function fetchDiscordStatus() {
   return res.json();
 }
 
-export async function fetchDiscordAuthUrl(): Promise<{ url: string; state: string }> {
-  const res = await fetch(`${API_BASE}/api/discord/auth-url`);
+export async function fetchDiscordAuthUrl(faction: 'ANGEL' | 'DEVIL'): Promise<{ url: string; state: string }> {
+  const res = await fetch(`${API_BASE}/api/discord/auth-url?faction=${encodeURIComponent(faction)}`);
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || 'Discord 로그인 URL 생성에 실패했습니다.');
