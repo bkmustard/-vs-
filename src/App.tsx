@@ -16,6 +16,38 @@ import {
 import { sfx } from './utils/audio.js';
 import { GameMetrics } from './game/RunnerGame.js';
 
+const MAX_LIVES = 10;
+const LIFE_REGEN_MS = 60 * 60 * 1000;
+type LifeState = { lives: number; nextLifeAt: number | null };
+const lifeKey = (playerId: string) => `kiban_lives_${playerId}`;
+function readLifeState(playerId: string): LifeState {
+  const now = Date.now();
+  let saved: Partial<LifeState> = {};
+  try { saved = JSON.parse(localStorage.getItem(lifeKey(playerId)) || '{}'); } catch {}
+  let lives = Math.max(0, Math.min(MAX_LIVES, Math.floor(Number(saved.lives ?? MAX_LIVES))));
+  let nextLifeAt = Number(saved.nextLifeAt) || null;
+  if (lives >= MAX_LIVES) nextLifeAt = null;
+  else {
+    if (!nextLifeAt) nextLifeAt = now + LIFE_REGEN_MS;
+    if (now >= nextLifeAt) {
+      const regained = Math.floor((now - nextLifeAt) / LIFE_REGEN_MS) + 1;
+      lives = Math.min(MAX_LIVES, lives + regained);
+      nextLifeAt = lives >= MAX_LIVES ? null : nextLifeAt + regained * LIFE_REGEN_MS;
+    }
+  }
+  const state = { lives, nextLifeAt };
+  localStorage.setItem(lifeKey(playerId), JSON.stringify(state));
+  return state;
+}
+function writeLifeState(playerId: string, state: LifeState) {
+  localStorage.setItem(lifeKey(playerId), JSON.stringify(state));
+}
+function lifeTimer(nextLifeAt: number | null): string {
+  if (!nextLifeAt) return '가득 참';
+  const seconds = Math.max(0, Math.ceil((nextLifeAt - Date.now()) / 1000));
+  return `${String(Math.floor(seconds / 3600)).padStart(2, '0')}:${String(Math.floor((seconds % 3600) / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')} 후 회복`;
+}
+
 // Components
 import { Header } from './components/Header.js';
 import { MainScoreboard } from './components/MainScoreboard.js';
@@ -46,6 +78,7 @@ export default function App() {
   // Player State
   const [player, setPlayer] = useState<PlayerData | null>(null);
   const [scores, setScores] = useState<FactionScoresResponse | null>(null);
+  const [lifeState, setLifeState] = useState<LifeState>({ lives: MAX_LIVES, nextLifeAt: null });
 
   // Active Game Session
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -98,6 +131,7 @@ export default function App() {
       fetchCurrentPlayer(savedPlayerId)
         .then((res) => {
           setPlayer(res.player);
+          setLifeState(readLifeState(res.player.id));
           if (!isFactionLocked && !res.player.factionLocked) {
             setIsGuestModalOpen(true);
           }
@@ -114,7 +148,10 @@ export default function App() {
     }
 
     // Polling refresh faction scores every 12 seconds
-    const interval = setInterval(loadScores, 12000);
+    const interval = setInterval(() => {
+      loadScores();
+      if (player?.id) setLifeState(readLifeState(player.id));
+    }, 12000);
     return () => clearInterval(interval);
   }, [loadScores]);
 
@@ -139,9 +176,24 @@ export default function App() {
       return;
     }
 
+    const currentLives = !isTestMode && player ? readLifeState(player.id) : null;
+    if (currentLives && currentLives.lives <= 0) {
+      setLifeState(currentLives);
+      alert(`목숨이 없습니다. ${lifeTimer(currentLives.nextLifeAt)}`);
+      return;
+    }
+
     try {
       const playerId = player ? player.id : 'dev_test_player';
       const sessionRes = await startGameSession(playerId, isTestMode);
+      if (currentLives && player) {
+        const nextState: LifeState = {
+          lives: currentLives.lives - 1,
+          nextLifeAt: currentLives.nextLifeAt || Date.now() + LIFE_REGEN_MS,
+        };
+        writeLifeState(player.id, nextState);
+        setLifeState(nextState);
+      }
       setActiveSessionId(sessionRes.sessionId);
       setGameKey((prev) => prev + 1);
       setCurrentView('PLAYING');
@@ -278,6 +330,7 @@ export default function App() {
               }
             }}
             isTestMode={isTestMode}
+            lives={lifeState.lives}
           />
         </main>
       ) : (
@@ -393,6 +446,12 @@ export default function App() {
                 )}
               </div>
 
+              <div className="mt-4 rounded-lg border-t-2 border-slate-800 pt-3 text-center">
+                <span className="text-[10px] font-bold text-slate-400 block">목숨 (최대 10개)</span>
+                <strong className="text-sm font-['Black_Han_Sans'] text-rose-300">
+                  {player ? lifeState.lives : 0}/10 · {lifeTimer(lifeState.nextLifeAt)}
+                </strong>
+              </div>
               <div className="mt-4 grid grid-cols-3 gap-2 border-t-2 border-slate-800 pt-3 text-center">
                 <div>
                   <span className="text-[10px] font-bold text-slate-400 block">내 누적 점수</span>
@@ -548,6 +607,7 @@ export default function App() {
         onClose={() => setIsGuestModalOpen(false)}
         onGuestRegistered={(newPlayer) => {
           setPlayer(newPlayer);
+          setLifeState(readLifeState(newPlayer.id));
           loadScores();
         }}
         initialPlayer={player}
@@ -557,6 +617,16 @@ export default function App() {
         isOpen={isDiscordModalOpen}
         onClose={() => setIsDiscordModalOpen(false)}
         player={player}
+        lives={lifeState.lives}
+        onTicketRedeemed={() => {
+          if (!player) return 0;
+          const current = readLifeState(player.id);
+          const added = Math.min(5, MAX_LIVES - current.lives);
+          const next = { lives: current.lives + added, nextLifeAt: current.lives + added >= MAX_LIVES ? null : current.nextLifeAt };
+          writeLifeState(player.id, next);
+          setLifeState(next);
+          return added;
+        }}
         onPlayerUpdated={(updatedPlayer) => {
           setPlayer(updatedPlayer);
           loadScores();
