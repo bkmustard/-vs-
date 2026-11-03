@@ -1,85 +1,95 @@
 @import "tailwindcss";
 
-@keyframes angelClash {
-  0% {
-    transform: translateX(0) scale(1) rotate(0deg);
-  }
-  25% {
-    transform: translateX(-18px) scale(0.95) rotate(-6deg);
-  }
-  48% {
-    transform: translateX(52px) scale(1.18) rotate(14deg);
-    filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.95));
-  }
-  54% {
-    transform: translateX(32px) scale(1.05) rotate(5deg);
-  }
-  75% {
-    transform: translateX(0) scale(1) rotate(0deg);
-  }
-  100% {
-    transform: translateX(0) scale(1) rotate(0deg);
-  }
+@keyframes tieAngel {
+  0%, 100% { transform: translateX(-104px) scale(1) rotate(0); }
+  12% { transform: translateX(-10px) scale(1.2) rotate(10deg); }
+  18% { transform: translateX(-35px) scale(.94) rotate(-7deg); }
+  34% { transform: translateX(-10px) scale(1.2) rotate(10deg); }
+  40% { transform: translateX(-35px) scale(.94) rotate(-7deg); }
+  56% { transform: translateX(-10px) scale(1.2) rotate(10deg); }
+  62% { transform: translateX(-35px) scale(.94) rotate(-7deg); }
+  78%, 95% { transform: translateX(-104px) scale(1) rotate(0); }
 }
 
-@keyframes devilClash {
-  0% {
-    transform: translateX(0) scale(1) rotate(0deg);
-  }
-  25% {
-    transform: translateX(18px) scale(0.95) rotate(6deg);
-  }
-  48% {
-    transform: translateX(-52px) scale(1.18) rotate(-14deg);
-    filter: drop-shadow(0 0 18px rgba(239, 68, 68, 0.95));
-  }
-  54% {
-    transform: translateX(-32px) scale(1.05) rotate(-5deg);
-  }
-  75% {
-    transform: translateX(0) scale(1) rotate(0deg);
-  }
-  100% {
-    transform: translateX(0) scale(1) rotate(0deg);
-  }
+@keyframes tieDevil {
+  0%, 100% { transform: translateX(104px) scale(1) rotate(0); }
+  12% { transform: translateX(10px) scale(1.2) rotate(-10deg); }
+  18% { transform: translateX(35px) scale(.94) rotate(7deg); }
+  34% { transform: translateX(10px) scale(1.2) rotate(-10deg); }
+  40% { transform: translateX(35px) scale(.94) rotate(7deg); }
+  56% { transform: translateX(10px) scale(1.2) rotate(-10deg); }
+  62% { transform: translateX(35px) scale(.94) rotate(7deg); }
+  78%, 95% { transform: translateX(104px) scale(1) rotate(0); }
 }
 
-@keyframes clashBurst {
-  0%, 42% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-  48% {
-    opacity: 1;
-    transform: scale(1.6);
-  }
-  56% {
-    opacity: 0.8;
-    transform: scale(1.2);
-  }
-  68%, 100% {
-    opacity: 0;
-    transform: scale(0.4);
-  }
+@keyframes angelWins {
+  0% { transform: translateX(-104px) scale(1) rotate(0); }
+  11% { transform: translateX(-8px) scale(1.2) rotate(10deg); }
+  17% { transform: translateX(-36px) scale(.94) rotate(-7deg); }
+  29% { transform: translateX(-8px) scale(1.2) rotate(10deg); }
+  35% { transform: translateX(-36px) scale(.94) rotate(-7deg); }
+  47% { transform: translateX(-8px) scale(1.2) rotate(10deg); }
+  54% { transform: translateX(-30px) scale(.96) rotate(-5deg); }
+  66%, 100% { transform: translateX(0) scale(1.08) rotate(0); }
 }
 
-@keyframes clashRing {
-  0%, 44% {
-    opacity: 0;
-    transform: scale(0.2);
-  }
-  48% {
-    opacity: 0.95;
-    transform: scale(1);
-  }
-  60% {
-    opacity: 0;
-    transform: scale(2.4);
-  }
-  100% {
-    opacity: 0;
-  }
+@keyframes devilLoses {
+  0% { transform: translateX(104px) scale(1) rotate(0); opacity: 1; }
+  11% { transform: translateX(8px) scale(1.2) rotate(-10deg); opacity: 1; }
+  17% { transform: translateX(36px) scale(.94) rotate(7deg); opacity: 1; }
+  29% { transform: translateX(8px) scale(1.2) rotate(-10deg); opacity: 1; }
+  35% { transform: translateX(36px) scale(.94) rotate(7deg); opacity: 1; }
+  47% { transform: translateX(8px) scale(1.2) rotate(-10deg); opacity: 1; }
+  54% { transform: translateX(42px) scale(.95) rotate(12deg); opacity: 1; }
+  68% { transform: translateX(480px) translateY(-70px) scale(.28) rotate(95deg); opacity: 0; }
+  100% { transform: translateX(480px) translateY(-70px) scale(.28) rotate(95deg); opacity: 0; }
 }
+
+@keyframes devilWins {
+  0% { transform: translateX(104px) scale(1) rotate(0); }
+  11% { transform: translateX(8px) scale(1.2) rotate(-10deg); }
+  17% { transform: translateX(36px) scale(.94) rotate(7deg); }
+  29% { transform: translateX(8px) scale(1.2) rotate(-10deg); }
+  35% { transform: translateX(36px) scale(.94) rotate(7deg); }
+  47% { transform: translateX(8px) scale(1.2) rotate(-10deg); }
+  54% { transform: translateX(30px) scale(.96) rotate(5deg); }
+  66%, 100% { transform: translateX(0) scale(1.08) rotate(0); }
+}
+
+@keyframes angelLoses {
+  0% { transform: translateX(-104px) scale(1) rotate(0); opacity: 1; }
+  11% { transform: translateX(-8px) scale(1.2) rotate(10deg); opacity: 1; }
+  17% { transform: translateX(-36px) scale(.94) rotate(-7deg); opacity: 1; }
+  29% { transform: translateX(-8px) scale(1.2) rotate(10deg); opacity: 1; }
+  35% { transform: translateX(-36px) scale(.94) rotate(-7deg); opacity: 1; }
+  47% { transform: translateX(-8px) scale(1.2) rotate(10deg); opacity: 1; }
+  54% { transform: translateX(-42px) scale(.95) rotate(-12deg); opacity: 1; }
+  68% { transform: translateX(-480px) translateY(-70px) scale(.28) rotate(-95deg); opacity: 0; }
+  100% { transform: translateX(-480px) translateY(-70px) scale(.28) rotate(-95deg); opacity: 0; }
+}
+
+@keyframes threeImpacts {
+  0%, 7%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+  12% { opacity: 1; transform: translate(-50%, -50%) scale(1.35); }
+  19%, 24% { opacity: 0; transform: translate(-50%, -50%) scale(.35); }
+  31% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+  38%, 43% { opacity: 0; transform: translate(-50%, -50%) scale(.35); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.7); }
+  66% { opacity: 0; transform: translate(-50%, -50%) scale(2.1); }
+}
+
+.battle-stage { isolation: isolate; }
+.battle-character { transform-origin: center; will-change: transform, opacity; }
+.battle-arena[data-leader="TIE"] .battle-angel { animation: tieAngel 2.8s cubic-bezier(.2,.7,.25,1) infinite; }
+.battle-arena[data-leader="TIE"] .battle-devil { animation: tieDevil 2.8s cubic-bezier(.2,.7,.25,1) infinite; }
+.battle-arena[data-leader="ANGEL"] .battle-angel { animation: angelWins 3.7s cubic-bezier(.18,.75,.22,1) forwards; }
+.battle-arena[data-leader="ANGEL"] .battle-devil { animation: devilLoses 3.7s cubic-bezier(.18,.75,.22,1) forwards; }
+.battle-arena[data-leader="DEVIL"] .battle-devil { animation: devilWins 3.7s cubic-bezier(.18,.75,.22,1) forwards; }
+.battle-arena[data-leader="DEVIL"] .battle-angel { animation: angelLoses 3.7s cubic-bezier(.18,.75,.22,1) forwards; }
+.battle-arena[data-leader="TIE"] .battle-impact { animation: threeImpacts 2.8s ease-out infinite; }
+.battle-arena[data-leader="ANGEL"] .battle-impact, .battle-arena[data-leader="DEVIL"] .battle-impact { animation: threeImpacts 3.7s ease-out forwards; }
+.battle-impact-ring { inset: 0; border-width: 3px; }
+.battle-impact-flash { inset: 18px; }
 
 @keyframes feverAngelGlow {
   0%, 100% {
