@@ -6,6 +6,8 @@ interface DiscordModalProps {
   isOpen: boolean;
   onClose: () => void;
   player: PlayerData | null;
+  lives: number;
+  onTicketRedeemed: () => number;
   onPlayerUpdated: (updated: PlayerData) => void;
 }
 
@@ -13,6 +15,8 @@ export const DiscordModal: React.FC<DiscordModalProps> = ({
   isOpen,
   onClose,
   player,
+  lives,
+  onTicketRedeemed,
   onPlayerUpdated,
 }) => {
   const [statusData, setStatusData] = useState<any>(null);
@@ -90,6 +94,10 @@ export const DiscordModal: React.FC<DiscordModalProps> = ({
   const handleRedeemCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponCode.trim()) return;
+    if (lives >= 10) {
+      setCouponMsg({ type: 'error', text: '목숨이 이미 10개입니다. 먼저 게임을 플레이해 주세요.' });
+      return;
+    }
     setIsSubmittingCoupon(true);
     setCouponMsg(null);
 
@@ -100,7 +108,8 @@ export const DiscordModal: React.FC<DiscordModalProps> = ({
       });
 
       if (res.success) {
-        setCouponMsg({ type: 'success', text: `쿠폰 등록 성공! 목숨 +${res.lives}개가 지급되었습니다.` });
+        const addedLives = onTicketRedeemed();
+        setCouponMsg({ type: 'success', text: `쿠폰 등록 성공! 목숨 +${addedLives}개 (${Math.min(10, lives + addedLives)}/10)` });
         setCouponCode('');
         handleSync(false);
       } else {
@@ -253,7 +262,7 @@ export const DiscordModal: React.FC<DiscordModalProps> = ({
             />
             <button
               type="submit"
-              disabled={isSubmittingCoupon}
+              disabled={isSubmittingCoupon || lives >= 10}
               className="rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 transition-colors"
             >
               {isSubmittingCoupon ? '확인 중...' : '쿠폰 등록'}
