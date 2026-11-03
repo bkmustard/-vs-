@@ -56,8 +56,8 @@ export interface EventConfig {
   startTime: string;
   endTime: string;
   status: 'ACTIVE' | 'PAUSED' | 'ENDED';
-  chipScoreDivisor: number; // e.g. 150 points = 1 chip
-  chipRewardCapPerGame: number; // e.g. 50
+  chipScoreDivisor: number; // e.g. 1,500 points = 1 chip
+  chipRewardCapPerGame: number; // e.g. 5
   dailyPlayLimit: number; // 0 = unlimited
 }
 
@@ -98,8 +98,8 @@ function getDefaultData(): DatabaseSchema {
       startTime: now.toISOString(),
       endTime: weekLater.toISOString(),
       status: 'ACTIVE',
-      chipScoreDivisor: 150,
-      chipRewardCapPerGame: 50,
+      chipScoreDivisor: 1500,
+      chipRewardCapPerGame: 5,
       dailyPlayLimit: 0,
     },
   };
