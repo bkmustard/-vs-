@@ -262,6 +262,8 @@ export default function App() {
         chipsCollectedInGame: metrics.chipsCollected,
         jumpsCount: metrics.jumpsCount,
         slidesCount: metrics.slidesCount,
+        playerNickname: player?.nickname,
+        playerFaction: activeFaction,
         isTestPlay: isTestMode,
       });
 
