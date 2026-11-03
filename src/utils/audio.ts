@@ -160,6 +160,68 @@ class SoundEffects {
     }
   }
 
+  // Death explosion: layered bass impact, noisy blast, and falling debris tail
+  public playDeathExplosion() {
+    if (this.isMuted) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const master = this.ctx.createGain();
+      master.gain.setValueAtTime(0.9, now);
+      master.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+      master.connect(this.ctx.destination);
+
+      const boom = this.ctx.createOscillator();
+      const boomGain = this.ctx.createGain();
+      boom.type = 'sine';
+      boom.frequency.setValueAtTime(150, now);
+      boom.frequency.exponentialRampToValueAtTime(32, now + 0.42);
+      boomGain.gain.setValueAtTime(0.95, now);
+      boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+      boom.connect(boomGain);
+      boomGain.connect(master);
+      boom.start(now);
+      boom.stop(now + 0.5);
+
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.7);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        const fade = Math.pow(1 - i / bufferSize, 2.2);
+        data[i] = (Math.random() * 2 - 1) * fade;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(4200, now);
+      filter.frequency.exponentialRampToValueAtTime(420, now + 0.7);
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.75, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.72);
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(master);
+      noise.start(now);
+
+      const crack = this.ctx.createOscillator();
+      const crackGain = this.ctx.createGain();
+      crack.type = 'sawtooth';
+      crack.frequency.setValueAtTime(780, now + 0.025);
+      crack.frequency.exponentialRampToValueAtTime(75, now + 0.22);
+      crackGain.gain.setValueAtTime(0.32, now + 0.025);
+      crackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+      crack.connect(crackGain);
+      crackGain.connect(master);
+      crack.start(now + 0.025);
+      crack.stop(now + 0.25);
+    } catch {
+      // AudioContext policy
+    }
+  }
+
   // Countdown beep
   public playCountdown(isFinal = false) {
     if (this.isMuted) return;
