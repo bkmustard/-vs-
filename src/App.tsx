@@ -449,7 +449,7 @@ export default function App() {
               </div>
 
               <div className="mt-4 rounded-lg border-t-2 border-slate-800 pt-3 text-center">
-                <span className="text-[10px] font-bold text-slate-400 block">목숨 (최대 10개)</span>
+                <span className="text-[10px] font-bold text-slate-400 block">남은 목숨:</span>
                 <strong className="text-sm font-['Black_Han_Sans'] text-rose-300">
                   {lifeState.lives}/10 · {lifeTimer(lifeState.nextLifeAt)}
                 </strong>
