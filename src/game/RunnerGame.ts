@@ -247,8 +247,8 @@ export class RunnerGame {
       this.player.isGrounded = false;
       this.player.isJumping = true;
       this.player.currentPlatform = null;
-      // Slightly shorter airtime with nearly unchanged jump height
-      this.player.vy = -778;
+      // Slightly lower jump for tighter obstacle clears
+      this.player.vy = -680;
       this.jumpsCount++;
       sfx.playJump();
 
