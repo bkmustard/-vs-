@@ -90,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1.5 rounded-xl border-3 border-black bg-amber-400 px-3 py-1.5 text-xs font-black text-slate-950 shadow-[3px_3px_0px_#000] hover:bg-amber-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#000] transition-all"
             >
               <Users className="h-3.5 w-3.5" />
-              진영 선택
+              로그인
             </button>
           )}
 
