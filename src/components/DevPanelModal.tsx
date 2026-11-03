@@ -580,11 +580,11 @@ export const DevPanelModal: React.FC<DevPanelModalProps> = ({
                       </label>
                       <input
                         type="number"
-                        value={eventConfig.chipScoreDivisor || 150}
+                        value={eventConfig.chipScoreDivisor || 1500}
                         onChange={(e) => setEventConfig({ ...eventConfig, chipScoreDivisor: e.target.value })}
                         className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white"
                       />
-                      <span className="text-[10px] text-slate-400">예: 150점당 1 이벤트 칩 지급</span>
+                      <span className="text-[10px] text-slate-400">예: 1,500점당 1 이벤트 칩 지급</span>
                     </div>
 
                     <div>
@@ -593,7 +593,7 @@ export const DevPanelModal: React.FC<DevPanelModalProps> = ({
                       </label>
                       <input
                         type="number"
-                        value={eventConfig.chipRewardCapPerGame || 50}
+                        value={eventConfig.chipRewardCapPerGame || 5}
                         onChange={(e) => setEventConfig({ ...eventConfig, chipRewardCapPerGame: e.target.value })}
                         className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white"
                       />
