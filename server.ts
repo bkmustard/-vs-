@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import {
   getDb,
   saveDb,
+  loadPersistentDb,
+  flushPersistentDb,
   getFactionScores,
   getLeaderboards,
   Player,
@@ -28,6 +30,29 @@ const DEV_ADMIN_CODE = process.env.DEV_ADMIN_CODE || 'gae03';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Each Vercel request reloads its state from Neon and waits for writes before responding.
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+  if (!req.path.startsWith('/api/')) return next();
+  try {
+    await loadPersistentDb();
+    const originalEnd = res.end.bind(res);
+    let ended = false;
+    (res as any).end = (...args: any[]) => {
+      if (ended) return res;
+      ended = true;
+      void flushPersistentDb().then(() => originalEnd(...args)).catch((err) => {
+        console.error('Failed to flush persistent game data:', err);
+        originalEnd(...args);
+      });
+      return res;
+    };
+    next();
+  } catch (err) {
+    console.error('Failed to load persistent game data:', err);
+    res.status(503).json({ error: '게임 기록 저장소에 연결할 수 없습니다.' });
+  }
+});
 
 // Serve public static assets (images, logos, audio, etc.)
 app.use(express.static(path.resolve(process.cwd(), 'public')));
