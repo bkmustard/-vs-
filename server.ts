@@ -582,14 +582,17 @@ app.get('/api/discord/auth-url', (req: Request, res: Response) => {
     });
   }
 
+  const requestedFaction = req.query.faction;
+  if (requestedFaction !== 'ANGEL' && requestedFaction !== 'DEVIL') {
+    return res.status(400).json({ error: '로그인 전에 진영을 선택해 주세요.' });
+  }
+
   const host = req.get('host') || `localhost:${PORT}`;
   const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
   const redirectUri = `${protocol}://${host}/api/discord/callback`;
 
-  const state = Math.random().toString(36).substring(2);
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(
-    redirectUri
-  )}&response_type=code&scope=identify`;
+  const state = `${requestedFaction}:${Math.random().toString(36).substring(2)}`;
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify&state=${encodeURIComponent(state)}`;
 
   res.json({ url, state });
 });
@@ -641,7 +644,8 @@ app.get('/api/discord/callback', async (req: Request, res: Response) => {
     const discordId = discordUser.id;
     const discordUsername = discordUser.global_name || discordUser.username;
 
-    let userFaction: Faction = 'ANGEL';
+    const selectedFaction = (req.query.state as string || '').split(':')[0];
+    const userFaction: Faction = selectedFaction === 'DEVIL' ? 'DEVIL' : 'ANGEL';
     const db = getDb();
     let player = db.players.find((p) => p.discordId === discordId);
     const now = new Date().toISOString();
@@ -655,6 +659,7 @@ app.get('/api/discord/callback', async (req: Request, res: Response) => {
       if (discordUser.avatar) {
         player.avatarUrl = `https://cdn.discordapp.com/avatars/${discordId}/${discordUser.avatar}.png`;
       }
+      player.factionLocked = true;
       player.updatedAt = now;
     } else {
       player = {
@@ -662,6 +667,7 @@ app.get('/api/discord/callback', async (req: Request, res: Response) => {
         serialNumber: generateGameSerial(),
         nickname: discordUsername,
         faction: userFaction,
+        factionLocked: true,
         isDiscord: true,
         discordId,
         discordUsername,
