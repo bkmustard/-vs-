@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Trophy, RotateCcw, Home, Sparkles, CheckCircle2, Lock } from 'lucide-react';
+import { Trophy, RotateCcw, Home, Sparkles, CheckCircle2, Lock, Sun, Flame } from 'lucide-react';
 import { PlayRecord, PlayerData } from '../api.js';
 
 interface GameOverModalProps {
@@ -22,6 +22,12 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   onRetry,
   onGoHome,
 }) => {
+  const [iconFailed, setIconFailed] = useState(false);
+
+  useEffect(() => {
+    setIconFailed(false);
+  }, [record?.id, record?.faction]);
+
   useEffect(() => {
     if (isOpen && record && record.score > 200) {
       try {
@@ -51,11 +57,22 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
         {/* Faction & GameOver Header */}
         <div className="relative mb-4 flex flex-col items-center">
-          <img
-            src={isAngel ? '/assets/angel.png' : '/assets/devil.png'}
-            alt={record.faction}
-            className="h-16 w-16 object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.5)] mb-2"
-          />
+          {iconFailed ? (
+            <div
+              role="img"
+              aria-label={isAngel ? '천사 진영' : '악마 진영'}
+              className={`mb-2 flex h-16 w-16 items-center justify-center rounded-full border-2 border-black shadow-[0_0_16px_rgba(250,204,21,0.35)] ${isAngel ? 'bg-sky-400 text-slate-950' : 'bg-rose-500 text-white'}`}
+            >
+              {isAngel ? <Sun className="h-10 w-10" /> : <Flame className="h-10 w-10" />}
+            </div>
+          ) : (
+            <img
+              src={isAngel ? '/assets/angel.png' : '/assets/devil.png'}
+              alt={isAngel ? '천사 진영' : '악마 진영'}
+              onError={() => setIconFailed(true)}
+              className="h-16 w-16 object-contain drop-shadow-[0_0_12px_rgba(250,204,21,0.5)] mb-2"
+            />
+          )}
           <span
             className={`text-xs font-black tracking-widest uppercase px-2.5 py-0.5 rounded-full border-2 border-black shadow-[2px_2px_0px_#000] mb-1 ${
               isAngel ? 'bg-sky-400 text-slate-950' : 'bg-rose-500 text-white'
