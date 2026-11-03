@@ -135,6 +135,8 @@ export async function finishGameSession(payload: {
   chipsCollectedInGame: number;
   jumpsCount: number;
   slidesCount: number;
+  playerNickname?: string;
+  playerFaction?: 'ANGEL' | 'DEVIL';
   isTestPlay?: boolean;
 }): Promise<{
   success: boolean;
