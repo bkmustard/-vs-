@@ -82,6 +82,7 @@ export default function App() {
 
   // Active Game Session
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeGameFaction, setActiveGameFaction] = useState<'ANGEL' | 'DEVIL'>('ANGEL');
   const [gameKey, setGameKey] = useState<number>(0);
   const [lastFinishedRecord, setLastFinishedRecord] = useState<PlayRecord | null>(null);
   const [lastChipsAwarded, setLastChipsAwarded] = useState<number>(0);
@@ -183,9 +184,11 @@ export default function App() {
       return;
     }
 
+    const startingFaction = isTestMode ? devTestFaction : player?.faction || 'ANGEL';
     try {
       const playerId = player ? player.id : 'dev_test_player';
       const sessionRes = await startGameSession(playerId, isTestMode);
+      setActiveGameFaction(startingFaction);
       if (currentLives && player) {
         const nextState: LifeState = {
           lives: currentLives.lives - 1,
@@ -218,7 +221,7 @@ export default function App() {
       sessionId: sessionId || `direct_${Date.now()}`,
       playerId: player ? player.id : 'guest',
       playerNickname: player ? player.nickname : '게스트',
-      faction: activeFaction,
+      faction: activeGameFaction,
       score: metrics.score,
       distance: metrics.distance,
       durationSeconds: metrics.durationSeconds,
@@ -263,12 +266,12 @@ export default function App() {
         jumpsCount: metrics.jumpsCount,
         slidesCount: metrics.slidesCount,
         playerNickname: player?.nickname,
-        playerFaction: activeFaction,
+        playerFaction: activeGameFaction,
         isTestPlay: isTestMode,
       });
 
       // Update with server confirmed data seamlessly
-      setLastFinishedRecord(result.record);
+      setLastFinishedRecord({ ...result.record, faction: activeGameFaction });
       setLastChipsAwarded(result.chipsAwarded);
       if (result.player) {
         setPlayer(result.player);
@@ -321,7 +324,7 @@ export default function App() {
         <main className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 animate-in fade-in duration-300 runner-playing-main">
           <GameView
             key={gameKey}
-            faction={activeFaction}
+            faction={activeGameFaction}
             player={player}
             onGameOver={handleGameOver}
             onQuit={() => {
