@@ -168,9 +168,9 @@ export default function App() {
     setActiveSessionId(null);
 
     // Calculate estimated chips locally for instant feedback
-    const divisor = scores?.eventConfig?.chipScoreDivisor || 150;
+    const divisor = scores?.eventConfig?.chipScoreDivisor || 1500;
     const baseChips = Math.floor(metrics.score / divisor);
-    const estimatedChips = Math.min(50, baseChips + Math.max(0, metrics.chipsCollected));
+    const estimatedChips = Math.min(scores?.eventConfig?.chipRewardCapPerGame || 5, baseChips + Math.max(0, metrics.chipsCollected));
 
     // Immediately prepare and open Game Over modal so it ALWAYS appears reliably without lag
     const localRecord: PlayRecord = {
