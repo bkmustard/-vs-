@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { generateRandomNickname } from '../utils/nickname.js';
 import { Sparkles, Dices, X, CheckCircle2, Lock, ShieldAlert } from 'lucide-react';
 import { PlayerData } from '../api.js';
@@ -26,6 +26,12 @@ export const GuestModal: React.FC<GuestModalProps> = ({
   const [selectedFaction, setSelectedFaction] = useState<'ANGEL' | 'DEVIL'>(
     initialPlayer?.faction || 'ANGEL'
   );
+
+  useEffect(() => {
+    if (isOpen && initialPlayer) {
+      setSelectedFaction(initialPlayer.faction);
+    }
+  }, [isOpen, initialPlayer?.id, initialPlayer?.faction]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
