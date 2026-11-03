@@ -303,7 +303,7 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-['Noto_Sans_KR']">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-['Noto_Sans_KR'] app-root">
       {/* Universal Header */}
       <Header
         player={player}
@@ -318,7 +318,7 @@ export default function App() {
 
       {/* Main Content View Switcher */}
       {currentView === 'PLAYING' ? (
-        <main className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 animate-in fade-in duration-300">
+        <main className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 animate-in fade-in duration-300 runner-playing-main">
           <GameView
             key={gameKey}
             faction={activeFaction}
