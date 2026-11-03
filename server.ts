@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import dotenv from 'dotenv';
 import {
   getDb,
@@ -27,6 +28,27 @@ dotenv.config();
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const DEV_ADMIN_CODE = process.env.DEV_ADMIN_CODE || 'gae03';
+const DEV_TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
+const DEV_TOKEN_SECRET = process.env.DEV_ADMIN_TOKEN_SECRET || DEV_ADMIN_CODE;
+
+function createDevToken(): string {
+  const issuedAt = Date.now().toString();
+  const nonce = randomBytes(16).toString('hex');
+  const payload = `${issuedAt}.${nonce}`;
+  const signature = createHmac('sha256', DEV_TOKEN_SECRET).update(payload).digest('hex');
+  return `v1.${payload}.${signature}`;
+}
+
+function isValidDevToken(token: string): boolean {
+  const [version, issuedAt, nonce, signature, extra] = token.split('.');
+  if (version !== 'v1' || !issuedAt || !nonce || !signature || extra !== undefined) return false;
+  const issuedAtMs = Number(issuedAt);
+  const now = Date.now();
+  if (!Number.isSafeInteger(issuedAtMs) || issuedAtMs > now + 60_000 || now - issuedAtMs > DEV_TOKEN_TTL_MS) return false;
+  const expected = createHmac('sha256', DEV_TOKEN_SECRET).update(`${issuedAt}.${nonce}`).digest();
+  const provided = Buffer.from(signature, 'hex');
+  return provided.length === expected.length && timingSafeEqual(provided, expected);
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -66,16 +88,13 @@ interface ActiveSession {
 }
 const activeSessions = new Map<string, ActiveSession>();
 
-// Active dev sessions
-const validDevTokens = new Set<string>();
-
 // Middleware to authenticate developer requests
 function requireDevAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
   const rawCode = (req.headers['x-dev-code'] as string) || '';
 
-  if ((token && validDevTokens.has(token)) || rawCode === DEV_ADMIN_CODE) {
+  if ((token && isValidDevToken(token)) || rawCode === DEV_ADMIN_CODE) {
     return next();
   }
   return res.status(401).json({ error: '인증되지 않은 관리자 접근입니다. (개발자 코드 필요)' });
@@ -412,8 +431,7 @@ app.post('/api/dev/auth', (req: Request, res: Response) => {
     return res.status(401).json({ error: '개발자 코드가 일치하지 않습니다.' });
   }
 
-  const devToken = `dev_token_${Date.now()}_${Math.random().toString(36).substring(2, 12)}`;
-  validDevTokens.add(devToken);
+  const devToken = createDevToken();
 
   const db = getDb();
   db.auditLogs.push({
