@@ -59,13 +59,13 @@ export const MainScoreboard: React.FC<MainScoreboardProps> = ({ scores }) => {
   const diff = scores?.scoreDiff || 0;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border-4 border-slate-900 bg-slate-900 shadow-[8px_8px_0px_#000000]">
+    <div className="relative overflow-hidden rounded-3xl bg-slate-900">
       {/* Dynamic Faction Glow Accents */}
       <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl" />
       <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-rose-500/10 blur-3xl" />
 
       {/* Top Banner: Status & Event Countdown */}
-      <div className="flex flex-wrap items-center justify-between border-b-4 border-slate-900 bg-slate-950 px-4 py-3 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between bg-slate-950 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-amber-400" />
           <span className="text-xs font-black text-slate-400">대항전 종료까지:</span>
@@ -102,45 +102,35 @@ export const MainScoreboard: React.FC<MainScoreboardProps> = ({ scores }) => {
       </div>
 
       {/* CONTINUOUS FACTION ICON CLASH ARENA */}
-      <div className="relative py-4 px-6 border-b-4 border-slate-900 bg-gradient-to-r from-sky-950/40 via-slate-950 to-rose-950/40 flex flex-col items-center justify-center overflow-hidden">
-        <div className="relative flex items-center justify-center h-24 w-full max-w-md">
+      <div data-leader={leading} className="relative battle-arena py-4 px-6 bg-gradient-to-r from-sky-950/40 via-slate-950 to-rose-950/40 flex flex-col items-center justify-center overflow-hidden">
+        <div className="relative battle-stage flex items-center justify-center h-24 w-full max-w-md">
           {/* Angel Icon Charging */}
-          <div className="absolute left-1/2 -ml-28 flex flex-col items-center animate-angel-clash z-10">
+          <div className="absolute left-1/2 flex flex-col items-center battle-character battle-angel z-10">
             <div className="relative">
               <img
                 src="/assets/angel.png"
                 alt="천사 진영 아이콘"
                 className="h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-[0_0_15px_rgba(56,189,248,0.8)] select-none"
               />
-              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 font-['Black_Han_Sans'] text-[10px] tracking-wider text-sky-300 whitespace-nowrap bg-sky-950 px-2 py-0.5 rounded-md border-2 border-sky-400 shadow-[2px_2px_0px_#000]">
-                ANGEL
-              </span>
+              
             </div>
           </div>
 
-          {/* Central Impact Burst & VS badge */}
-          <div className="relative flex items-center justify-center z-20">
-            {/* Impact Shockwave Rings */}
-            <div className="pointer-events-none absolute h-24 w-24 rounded-full border-3 border-amber-400/90 animate-clash-ring" />
-            <div className="pointer-events-none absolute h-16 w-16 rounded-full bg-gradient-to-r from-sky-400 via-amber-300 to-rose-500 blur-md animate-clash-burst" />
-
-            {/* Central VS Badge */}
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400 border-3 border-black shadow-[3px_3px_0px_#000]">
-              <span className="font-['Black_Han_Sans'] text-base italic text-slate-950">VS</span>
-            </div>
+          {/* Three-hit impact burst */}
+          <div className="battle-impact pointer-events-none absolute left-1/2 top-1/2 z-20 h-20 w-20 -translate-x-1/2 -translate-y-1/2">
+            <div className="battle-impact-ring absolute inset-0 rounded-full border-4 border-amber-300" />
+            <div className="battle-impact-flash absolute inset-3 rounded-full bg-gradient-to-r from-sky-300 via-amber-200 to-rose-400 blur-md" />
           </div>
 
           {/* Devil Icon Charging */}
-          <div className="absolute right-1/2 -mr-28 flex flex-col items-center animate-devil-clash z-10">
+          <div className="absolute left-1/2 flex flex-col items-center battle-character battle-devil z-10">
             <div className="relative">
               <img
                 src="/assets/devil.png"
                 alt="악마 진영 아이콘"
                 className="h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.8)] select-none"
               />
-              <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 font-['Black_Han_Sans'] text-[10px] tracking-wider text-rose-300 whitespace-nowrap bg-rose-950 px-2 py-0.5 rounded-md border-2 border-rose-500 shadow-[2px_2px_0px_#000]">
-                DEVIL
-              </span>
+              
             </div>
           </div>
         </div>
