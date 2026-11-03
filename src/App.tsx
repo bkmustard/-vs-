@@ -445,7 +445,7 @@ export default function App() {
               <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-950 p-2.5 text-xs text-slate-300 border-2 border-black shadow-[2px_2px_0px_#000]">
                 <span className="font-bold">지급 비율:</span>
                 <span className="font-black text-amber-300">
-                  {scores?.eventConfig?.chipScoreDivisor || 150}점당 1칩 + 수집 보너스
+                  {scores?.eventConfig?.chipScoreDivisor || 1500}점당 1칩 + 수집 보너스
                 </span>
               </div>
             </div>
