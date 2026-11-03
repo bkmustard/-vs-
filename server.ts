@@ -296,10 +296,10 @@ app.post('/api/game/finish', async (req: Request, res: Response) => {
   }
 
   // Reward calculation based on server event config
-  const divisor = Math.max(50, db.eventConfig.chipScoreDivisor || 150);
+  const divisor = Math.max(50, db.eventConfig.chipScoreDivisor || 1500);
   const baseChips = Math.floor(score / divisor);
   const rawTotalChips = baseChips + Math.max(0, Number(chipsCollectedInGame) || 0);
-  const chipsAwarded = Math.min(rawTotalChips, db.eventConfig.chipRewardCapPerGame || 50);
+  const chipsAwarded = Math.min(rawTotalChips, db.eventConfig.chipRewardCapPerGame || 5);
 
   let rewardStatus: PlayRecord['rewardStatus'] = 'LOCAL_STORED';
 
