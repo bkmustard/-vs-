@@ -135,7 +135,7 @@
 
 
 /* Mobile runners use landscape; keep desktop layout unchanged. */
-@media screen and (max-width: 900px) and (orientation: portrait) {
+@media screen and (max-width: 900px) and (orientation: portrait) and (pointer: coarse) and (hover: none) {
   body::before {
     content: '';
     position: fixed;
