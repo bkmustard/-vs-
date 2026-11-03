@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@keyframes angelClash {
+  0% {
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-18px) scale(0.95) rotate(-6deg);
+  }
+  48% {
+    transform: translateX(52px) scale(1.18) rotate(14deg);
+    filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.95));
+  }
+  54% {
+    transform: translateX(32px) scale(1.05) rotate(5deg);
+  }
+  75% {
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+  100% {
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes devilClash {
+  0% {
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateX(18px) scale(0.95) rotate(6deg);
+  }
+  48% {
+    transform: translateX(-52px) scale(1.18) rotate(-14deg);
+    filter: drop-shadow(0 0 18px rgba(239, 68, 68, 0.95));
+  }
+  54% {
+    transform: translateX(-32px) scale(1.05) rotate(-5deg);
+  }
+  75% {
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+  100% {
+    transform: translateX(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes clashBurst {
+  0%, 42% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  48% {
+    opacity: 1;
+    transform: scale(1.6);
+  }
+  56% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+  68%, 100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@keyframes clashRing {
+  0%, 44% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  48% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+  60% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes feverAngelGlow {
+  0%, 100% {
+    box-shadow: inset 0 0 35px 8px rgba(56, 189, 248, 0.7), inset 0 0 60px 15px rgba(250, 204, 21, 0.5), 0 0 40px rgba(56, 189, 248, 0.5);
+  }
+  50% {
+    box-shadow: inset 0 0 55px 16px rgba(56, 189, 248, 0.95), inset 0 0 90px 25px rgba(254, 240, 138, 0.8), 0 0 60px rgba(250, 204, 21, 0.8);
+  }
+}
+
+@keyframes feverDevilGlow {
+  0%, 100% {
+    box-shadow: inset 0 0 35px 8px rgba(239, 68, 68, 0.8), inset 0 0 60px 15px rgba(249, 115, 22, 0.6), 0 0 40px rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    box-shadow: inset 0 0 60px 18px rgba(220, 38, 38, 1), inset 0 0 95px 28px rgba(234, 88, 12, 0.85), 0 0 65px rgba(239, 68, 68, 0.9);
+  }
+}
+
+.animate-angel-clash {
+  animation: angelClash 1.8s cubic-bezier(0.3, 0.05, 0.2, 1) infinite;
+}
+
+.animate-devil-clash {
+  animation: devilClash 1.8s cubic-bezier(0.3, 0.05, 0.2, 1) infinite;
+}
+
+.animate-clash-burst {
+  animation: clashBurst 1.8s ease-out infinite;
+}
+
+.animate-clash-ring {
+  animation: clashRing 1.8s ease-out infinite;
+}
+
+.fever-border-angel {
+  animation: feverAngelGlow 0.9s ease-in-out infinite;
+}
+
+.fever-border-devil {
+  animation: feverDevilGlow 0.9s ease-in-out infinite;
+}

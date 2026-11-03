@@ -1,0 +1,6 @@
+{
+  "name": "천사 VS 악마: 기반스타즈 S8",
+  "description": "천사 진영과 악마 진영의 대항 무한 질주 웹게임. 점수 경쟁, 이벤트 칩 보상, 실시간 랭킹 및 개발자 관리 패널 제공.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
