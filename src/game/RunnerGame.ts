@@ -19,7 +19,7 @@ export interface GameMetrics {
 
 export interface Obstacle {
   id: number;
-  type: 'SPIKE' | 'AERIAL' | 'BOX' | 'CEILING' | 'DROPPER' | 'SURGE';
+  type: 'SPIKE' | 'AERIAL' | 'BOX' | 'CEILING' | 'DROPPER' | 'SURGE' | 'HOPPER' | 'BOBBING_ORB' | 'LIFTING_GATE';
   x: number;
   y: number;
   width: number;
@@ -31,6 +31,10 @@ export interface Obstacle {
   warningPhase?: number;
   surgeState?: 'DORMANT' | 'WARNING' | 'ERUPTING' | 'PEAK';
   surgeVy?: number;
+  movePhase?: number;
+  moveCenterY?: number;
+  moveAmplitude?: number;
+  moveSpeed?: number;
 }
 
 export interface Platform {
@@ -242,8 +246,8 @@ export class RunnerGame {
       this.player.isGrounded = false;
       this.player.isJumping = true;
       this.player.currentPlatform = null;
-      // High, responsive arcade jump velocity (-750 px/s)
-      this.player.vy = -750;
+      // Slightly shorter airtime with nearly unchanged jump height
+      this.player.vy = -778;
       this.jumpsCount++;
       sfx.playJump();
 
@@ -422,7 +426,7 @@ export class RunnerGame {
     // -------------------------------------------------------------
     // Player Vertical Physics (Gravity & Landing)
     // -------------------------------------------------------------
-    const gravity = 1950; // px/s^2
+    const gravity = 2100; // px/s^2
     if (!this.player.isGrounded) {
       this.player.vy += gravity * dt;
       this.player.y += this.player.vy * dt;
@@ -459,6 +463,11 @@ export class RunnerGame {
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i];
       obs.x -= frameDistance;
+
+      if (obs.movePhase !== undefined && obs.moveCenterY !== undefined && obs.moveAmplitude !== undefined) {
+        obs.movePhase += dt * (obs.moveSpeed || 1);
+        obs.y = obs.moveCenterY + Math.sin(obs.movePhase) * obs.moveAmplitude;
+      }
 
       // Handle Sudden Descending Obstacle (DROPPER)
       if (obs.type === 'DROPPER') {
@@ -655,8 +664,8 @@ export class RunnerGame {
   }
 
   private spawnPattern() {
-    // 8 Varied Patterns including Platforms, Droppers, Surging Spikes & Fever Orbs!
-    const patternType = Math.floor(Math.random() * 8);
+    // 11 obstacle patterns including three vertically moving hazards!
+    const patternType = Math.floor(Math.random() * 11);
     const startX = this.V_WIDTH + 80;
 
     switch (patternType) {
@@ -864,6 +873,66 @@ export class RunnerGame {
             bobPhase: i,
           });
         }
+        break;
+      }
+      case 8: {
+        // Vertically hopping crystal: jump over it while it drops low.
+        const width = 52;
+        const height = 40;
+        const moveCenterY = this.GROUND_Y - height - 24;
+        this.obstacles.push({
+          id: Date.now() + Math.random(),
+          type: 'HOPPER',
+          x: startX,
+          y: moveCenterY,
+          width,
+          height,
+          passed: false,
+          movePhase: Math.random() * Math.PI * 2,
+          moveCenterY,
+          moveAmplitude: 24,
+          moveSpeed: 3.4,
+        });
+        break;
+      }
+      case 9: {
+        // Bobbing low orb: its lower swing can be ducked under.
+        const width = 48;
+        const height = 44;
+        const moveCenterY = this.GROUND_Y - 132;
+        this.obstacles.push({
+          id: Date.now() + Math.random(),
+          type: 'BOBBING_ORB',
+          x: startX,
+          y: moveCenterY,
+          width,
+          height,
+          passed: false,
+          movePhase: Math.random() * Math.PI * 2,
+          moveCenterY,
+          moveAmplitude: 32,
+          moveSpeed: 2.6,
+        });
+        break;
+      }
+      case 10: {
+        // Lifting overhead gate: stay grounded while it moves.
+        const width = 100;
+        const height = 76;
+        const moveCenterY = 238;
+        this.obstacles.push({
+          id: Date.now() + Math.random(),
+          type: 'LIFTING_GATE',
+          x: startX,
+          y: moveCenterY,
+          width,
+          height,
+          passed: false,
+          movePhase: Math.random() * Math.PI * 2,
+          moveCenterY,
+          moveAmplitude: 24,
+          moveSpeed: 1.9,
+        });
         break;
       }
       case 7:
@@ -1813,6 +1882,93 @@ export class RunnerGame {
         // -------------------------------------------------------------
         // 6. RISING ERUPTING OBSTACLE (SURGE)
         // -------------------------------------------------------------
+        case 'HOPPER': {
+          const w = obs.width;
+          const h = obs.height;
+          this.ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+          this.ctx.beginPath();
+          this.ctx.ellipse(w / 2, h + 4, w * 0.55, 6, 0, 0, Math.PI * 2);
+          this.ctx.fill();
+          this.ctx.fillStyle = isAngel ? '#38bdf8' : '#ef4444';
+          this.ctx.strokeStyle = '#000000';
+          this.ctx.lineWidth = 3;
+          this.ctx.beginPath();
+          this.ctx.moveTo(2, h);
+          this.ctx.lineTo(w * 0.28, h * 0.46);
+          this.ctx.lineTo(w * 0.38, h * 0.62);
+          this.ctx.lineTo(w * 0.62, 2);
+          this.ctx.lineTo(w * 0.72, h * 0.62);
+          this.ctx.lineTo(w - 2, h);
+          this.ctx.closePath();
+          this.ctx.fill();
+          this.ctx.stroke();
+          this.ctx.strokeStyle = isAngel ? '#fef08a' : '#fbbf24';
+          this.ctx.lineWidth = 2;
+          this.ctx.beginPath();
+          this.ctx.moveTo(w * 0.5, h - 3);
+          this.ctx.lineTo(w * 0.62, 6);
+          this.ctx.stroke();
+          break;
+        }
+        case 'BOBBING_ORB': {
+          const w = obs.width;
+          const h = obs.height;
+          const pulse = Math.sin(Date.now() * 0.008) * 3;
+          const orb = this.ctx.createRadialGradient(w * 0.35, h * 0.3, 2, w / 2, h / 2, w * 0.58);
+          orb.addColorStop(0, '#ffffff');
+          orb.addColorStop(0.35, isAngel ? '#38bdf8' : '#f97316');
+          orb.addColorStop(1, isAngel ? '#1d4ed8' : '#7f1d1d');
+          this.ctx.shadowColor = isAngel ? '#38bdf8' : '#ef4444';
+          this.ctx.shadowBlur = 18;
+          this.ctx.fillStyle = orb;
+          this.ctx.strokeStyle = '#000000';
+          this.ctx.lineWidth = 3;
+          this.ctx.beginPath();
+          this.ctx.arc(w / 2, h / 2, w * 0.4 + pulse, 0, Math.PI * 2);
+          this.ctx.fill();
+          this.ctx.stroke();
+          this.ctx.shadowBlur = 0;
+          this.ctx.strokeStyle = isAngel ? '#fef08a' : '#ffedd5';
+          this.ctx.lineWidth = 2;
+          this.ctx.beginPath();
+          this.ctx.ellipse(w / 2, h / 2, w * 0.52, h * 0.2, Date.now() * 0.002, 0, Math.PI * 2);
+          this.ctx.stroke();
+          break;
+        }
+        case 'LIFTING_GATE': {
+          const w = obs.width;
+          const h = obs.height;
+          this.ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+          this.ctx.fillRect(8, h - 8, w - 16, 12);
+          const gate = this.ctx.createLinearGradient(0, 0, 0, h);
+          gate.addColorStop(0, isAngel ? '#fef08a' : '#f97316');
+          gate.addColorStop(0.5, isAngel ? '#38bdf8' : '#ef4444');
+          gate.addColorStop(1, isAngel ? '#0369a1' : '#7f1d1d');
+          this.ctx.fillStyle = gate;
+          this.ctx.strokeStyle = '#000000';
+          this.ctx.lineWidth = 3;
+          this.ctx.fillRect(8, 8, w - 16, h - 16);
+          this.ctx.strokeRect(8, 8, w - 16, h - 16);
+          this.ctx.fillStyle = '#facc15';
+          for (let sx = 12; sx < w - 12; sx += 22) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(sx, h - 10);
+            this.ctx.lineTo(sx + 10, h - 10);
+            this.ctx.lineTo(sx + 20, h - 24);
+            this.ctx.lineTo(sx + 10, h - 24);
+            this.ctx.closePath();
+            this.ctx.fill();
+          }
+          this.ctx.strokeStyle = isAngel ? '#ffffff' : '#fecaca';
+          this.ctx.lineWidth = 3;
+          this.ctx.beginPath();
+          this.ctx.moveTo(20, 0);
+          this.ctx.lineTo(20, 8);
+          this.ctx.moveTo(w - 20, 0);
+          this.ctx.lineTo(w - 20, 8);
+          this.ctx.stroke();
+          break;
+        }
         case 'SURGE': {
           const w = obs.width;
           const h = obs.height;
