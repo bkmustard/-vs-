@@ -1501,7 +1501,7 @@ export class RunnerGame {
       this.ctx.moveTo(pit.x, this.GROUND_Y - 1);
       this.ctx.lineTo(pit.x + pit.width, this.GROUND_Y - 1);
       this.ctx.stroke();
-      this.ctx.strokeStyle = isAngel ? '#38bdf8' : '#fb5b35';
+      this.ctx.strokeStyle = isAngel ? '#718096' : '#fb5b35';
       this.ctx.lineWidth = 3;
       this.ctx.beginPath();
       this.ctx.moveTo(pit.x + 1, this.GROUND_Y + 2);
@@ -1512,7 +1512,7 @@ export class RunnerGame {
       this.ctx.lineTo(pit.x + pit.width - 1, this.GROUND_Y + 2);
       this.ctx.stroke();
 
-      this.ctx.fillStyle = isAngel ? 'rgba(56, 189, 248, 0.18)' : 'rgba(249, 115, 22, 0.2)';
+      this.ctx.fillStyle = isAngel ? 'rgba(113, 128, 150, 0.12)' : 'rgba(249, 115, 22, 0.2)';
       this.ctx.fillRect(x + width * 0.3, this.GROUND_Y + depth * 0.84, width * 0.4, 3);
     }
   }
@@ -1613,7 +1613,7 @@ export class RunnerGame {
           this.ctx.lineTo(0, h);
           this.ctx.closePath();
           this.ctx.fill();
-          this.ctx.strokeStyle = isAngel ? '#38bdf8' : '#ef4444';
+          this.ctx.strokeStyle = isAngel ? '#718096' : '#ef4444';
           this.ctx.lineWidth = 3;
           this.ctx.beginPath();
           this.ctx.moveTo(0, 1);
@@ -1625,7 +1625,7 @@ export class RunnerGame {
           this.ctx.lineTo(w * 0.88, 6);
           this.ctx.lineTo(w, 1);
           this.ctx.stroke();
-          this.ctx.fillStyle = isAngel ? 'rgba(56, 189, 248, 0.45)' : 'rgba(249, 115, 22, 0.5)';
+          this.ctx.fillStyle = isAngel ? 'rgba(113, 128, 150, 0.24)' : 'rgba(249, 115, 22, 0.5)';
           this.ctx.fillRect(w * 0.18, h * 0.55, w * 0.64, 3);
           break;
         }
