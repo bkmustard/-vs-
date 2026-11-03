@@ -131,6 +131,7 @@ export class RunnerGame {
   private isFeverActive = false;
   private feverDuration = 6.0;
   private feverTimer = 0;
+  private postFeverInvulnerabilityTime = 0;
 
   // Spawning & Environment
   private obstacles: Obstacle[] = [];
@@ -355,6 +356,9 @@ export class RunnerGame {
     if (this.state !== 'PLAYING') return;
 
     // Update Fever Mode
+    if (this.postFeverInvulnerabilityTime > 0) {
+      this.postFeverInvulnerabilityTime = Math.max(0, this.postFeverInvulnerabilityTime - dt);
+    }
     if (this.isFeverActive) {
       this.feverTimer -= dt;
       this.spawnFeverTrailParticles();
@@ -362,6 +366,7 @@ export class RunnerGame {
         this.isFeverActive = false;
         this.feverTimer = 0;
         this.feverMeter = 0;
+        this.postFeverInvulnerabilityTime = 0.25;
         this.addFloatText('FEVER END', this.player.x + 35, this.player.y - 20, '#94a3b8');
       }
     }
@@ -534,7 +539,11 @@ export class RunnerGame {
 
       // Collision check
       if (!obs.passed && this.checkCollision(playerHitbox, obs)) {
-        if (this.isFeverActive) {
+        if (this.postFeverInvulnerabilityTime > 0) {
+          obs.passed = true;
+          this.obstacles.splice(i, 1);
+          continue;
+        } else if (this.isFeverActive) {
           // SMASH OBSTACLE IN FEVER MODE!
           obs.passed = true;
           this.obstacles.splice(i, 1);
@@ -2240,6 +2249,10 @@ export class RunnerGame {
     const isAngel = this.faction === 'ANGEL';
 
     this.ctx.save();
+
+    if (this.postFeverInvulnerabilityTime > 0 && Math.floor(Date.now() / 70) % 2 === 0) {
+      this.ctx.globalAlpha = 0.3;
+    }
 
     let drawWidth = this.player.baseWidth;
     let drawHeight = this.player.baseHeight;
