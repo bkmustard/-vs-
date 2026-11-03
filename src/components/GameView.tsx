@@ -96,10 +96,10 @@ export const GameView: React.FC<GameViewProps> = ({
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-full max-w-5xl mx-auto px-2 py-2">
+    <div className="relative flex flex-col items-center justify-center w-full max-w-5xl mx-auto px-2 py-2 mobile-game-shell">
       {/* Arcade Screen Frame */}
       <div
-        className={`relative w-full aspect-[960/500] max-h-[72vh] overflow-hidden rounded-2xl border-4 transition-all duration-300 ${
+        className={`relative w-full aspect-[960/500] max-h-[72vh] overflow-hidden mobile-game-screen rounded-2xl border-4 transition-all duration-300 ${
           metrics.isFeverActive
             ? faction === 'ANGEL'
               ? 'border-sky-300 fever-border-angel shadow-[0_0_55px_rgba(56,189,248,0.85)]'
@@ -237,7 +237,7 @@ export const GameView: React.FC<GameViewProps> = ({
       </div>
 
       {/* Mobile Touch Controls (Bottom Bar) */}
-      <div className="w-full flex items-center justify-between mt-3 px-2">
+      <div className="w-full flex items-center justify-between mt-3 px-2 mobile-game-controls">
         {/* Slide Button (Left) */}
         <button
           onTouchStart={handleSlideTouchStart}
