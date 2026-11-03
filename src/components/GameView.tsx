@@ -9,6 +9,7 @@ interface GameViewProps {
   onGameOver: (metrics: GameMetrics) => void;
   onQuit: () => void;
   isTestMode: boolean;
+  lives: number;
 }
 
 export const GameView: React.FC<GameViewProps> = ({
@@ -17,6 +18,7 @@ export const GameView: React.FC<GameViewProps> = ({
   onGameOver,
   onQuit,
   isTestMode,
+  lives,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const gameRef = useRef<RunnerGame | null>(null);
@@ -116,6 +118,7 @@ export const GameView: React.FC<GameViewProps> = ({
 
         {/* HUD Top Bar Overlay */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-3 sm:p-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-none">
+          <div className="rounded-full border border-rose-500/40 bg-black/60 px-2.5 py-1 text-xs font-black text-rose-300">목숨 {lives}/10</div>
           {/* Distance, Score, and Fever Gauge */}
           <div className="flex items-center gap-3 sm:gap-5 pointer-events-auto">
             {/* Score */}
